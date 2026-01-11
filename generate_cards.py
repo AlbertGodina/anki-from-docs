@@ -5,6 +5,7 @@ Designed for structured educational notes in Catalan.
 """
 
 from pathlib import Path
+from typing import List, Tuple, Dict, Optional
 import csv
 import re
 
@@ -29,7 +30,7 @@ DEFINITION_STARTERS = (
 )
 
 
-def extract_text(path: Path) -> list[str]:
+def extract_text(path: Path) -> List[str]:
     if path.suffix.lower() == ".pdf":
         return extract_pdf(path)
     if path.suffix.lower() == ".docx":
@@ -37,7 +38,7 @@ def extract_text(path: Path) -> list[str]:
     raise ValueError("Format no suportat. Usa PDF o DOCX.")
 
 
-def extract_pdf(path: Path) -> list[str]:
+def extract_pdf(path: Path) -> List[str]:
     paragraphs = []
     with pdfplumber.open(path) as pdf:
         for page in pdf.pages:
@@ -51,12 +52,12 @@ def extract_pdf(path: Path) -> list[str]:
     return paragraphs
 
 
-def extract_docx(path: Path) -> list[str]:
+def extract_docx(path: Path) -> List[str]:
     doc = Document(path)
     return [p.text.strip() for p in doc.paragraphs if p.text.strip()]
 
 
-def detect_sections(paragraphs: list[str]) -> list[tuple[str, str]]:
+def detect_sections(paragraphs: List[str]) -> List[Tuple[str, str]]:
     current_section = "General"
     result = []
 
@@ -74,7 +75,7 @@ def is_definition(sentence: str) -> bool:
     return sentence.startswith(DEFINITION_STARTERS) and len(sentence.split()) > 8
 
 
-def generate_basic_card(sentence: str) -> tuple[str, str]:
+def generate_basic_card(sentence: str) -> Tuple[str, str]:
     words = sentence.split()
     key = " ".join(words[:5]) + "..."
     front = f"Defineix: {key}"
@@ -82,7 +83,7 @@ def generate_basic_card(sentence: str) -> tuple[str, str]:
     return front, back
 
 
-def generate_cloze(sentence: str) -> str | None:
+def generate_cloze(sentence: str) -> Optional[str]:
     words = sentence.split()
     if len(words) < 10:
         return None
@@ -94,7 +95,7 @@ def generate_cloze(sentence: str) -> str | None:
     return sentence.replace(key_word, f"{{{{c1::{key_word}}}}}", 1)
 
 
-def generate_cards(sectioned_text: list[tuple[str, str]]) -> list[dict]:
+def generate_cards(sectioned_text: List[Tuple[str, str]]) -> List[Dict]:
     cards = []
 
     for section, sentence in sectioned_text:
@@ -121,7 +122,7 @@ def generate_cards(sectioned_text: list[tuple[str, str]]) -> list[dict]:
     return cards
 
 
-def write_csv(cards: list[dict]) -> None:
+def write_csv(cards: List[Dict]) -> None:
     with open(OUTPUT_FILE, "w", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(
             f,
